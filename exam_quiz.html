@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Certified Developer — Practice Review</title>
+<style>
+  :root {
+    --sun: #f2a93b;
+    --sun-bright: #ffb84d;
+    --sun-light: #fde3b6;
+    --stone: #6b6259;
+    --stone-dark: #4a453f;
+    --stone-darker: #2f2b27;
+    --stone-light: #d8cfc2;
+    --stone-lightest: #f3ede3;
+    --correct: #4d7c4a;
+    --correct-bg: #dcecd8;
+    --wrong: #b3452f;
+    --wrong-bg: #f6ded7;
+    --shadow: 0 8px 24px rgba(47,43,39,0.25);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(160deg, var(--sun-light) 0%, var(--sun) 35%, var(--stone-light) 65%, var(--stone) 100%);
+    min-height: 100vh;
+    color: var(--stone-darker);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 60px;
+  }
+  header { width: 100%; max-width: 900px; text-align: center; margin-bottom: 20px; }
+  header h1 { color: var(--stone-darker); font-size: 1.8rem; margin: 0 0 4px; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(255,255,255,0.3); }
+  header p { margin: 0; color: var(--stone-dark); font-weight: 600; }
+  .progress-wrap { width: 100%; max-width: 900px; margin-bottom: 18px; }
+  .progress-bar { background: rgba(47,43,39,0.15); border-radius: 20px; height: 10px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--stone-dark), var(--sun-bright)); transition: width 0.3s ease; }
+  .nav-grid { width: 100%; max-width: 900px; display: grid; grid-template-columns: repeat(auto-fill, minmax(38px, 1fr)); gap: 6px; margin-bottom: 20px; background: rgba(255,255,255,0.35); padding: 12px; border-radius: 14px; box-shadow: var(--shadow); }
+  .nav-btn { aspect-ratio: 1; border: 2px solid var(--stone); background: var(--stone-lightest); color: var(--stone-darker); border-radius: 8px; font-weight: 700; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; }
+  .nav-btn:hover { background: var(--sun-light); }
+  .nav-btn.active { background: var(--sun-bright); border-color: var(--stone-darker); box-shadow: 0 0 0 2px var(--sun-bright); }
+  .nav-btn.answered { background: var(--stone-light); border-color: var(--stone-dark); }
+  .nav-btn.correct-mark { background: var(--correct-bg); border-color: var(--correct); color: var(--correct); }
+  .nav-btn.wrong-mark { background: var(--wrong-bg); border-color: var(--wrong); color: var(--wrong); }
+  .card { width: 100%; max-width: 900px; background: var(--stone-lightest); border-radius: 18px; box-shadow: var(--shadow); padding: 32px; border: 1px solid var(--stone-light); }
+  .q-label { display: inline-block; background: var(--stone-darker); color: var(--sun-light); padding: 4px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; margin-bottom: 14px; }
+  .q-text { font-size: 1.15rem; line-height: 1.5; margin-bottom: 24px; color: var(--stone-darker); font-weight: 500; }
+  .options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+  .option { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border: 2px solid var(--stone-light); border-radius: 12px; background: #fffdf9; cursor: pointer; transition: all 0.15s ease; line-height: 1.4; }
+  .option:hover { border-color: var(--sun); background: var(--sun-light); }
+  .option.selected { border-color: var(--sun-bright); background: var(--sun-light); box-shadow: 0 0 0 2px var(--sun-bright); }
+  .option .letter { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--stone); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; }
+  .option.selected .letter { background: var(--stone-darker); }
+  .option.locked { cursor: default; }
+  .option.locked:hover { border-color: var(--stone-light); background: #fffdf9; }
+  .option.correct-answer { border-color: var(--correct); background: var(--correct-bg); }
+  .option.correct-answer .letter { background: var(--correct); }
+  .option.wrong-answer { border-color: var(--wrong); background: var(--wrong-bg); }
+  .option.wrong-answer .letter { background: var(--wrong); }
+  .btn-row { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  button.action { background: var(--stone-darker); color: var(--sun-light); border: none; padding: 12px 24px; border-radius: 10px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: transform 0.1s ease, background 0.2s ease; }
+  button.action:hover { background: var(--stone-dark); transform: translateY(-1px); }
+  button.action:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  button.submit-btn { background: var(--sun-bright); color: var(--stone-darker); }
+  button.submit-btn:hover { background: var(--sun); }
+  .feedback { margin-top: 20px; padding: 18px; border-radius: 12px; font-size: 0.98rem; line-height: 1.5; display: none; }
+  .feedback.show { display: block; }
+  .feedback.correct { background: var(--correct-bg); border: 2px solid var(--correct); color: var(--stone-darker); }
+  .feedback.wrong { background: var(--wrong-bg); border: 2px solid var(--wrong); color: var(--stone-darker); }
+  .feedback .verdict { font-weight: 800; font-size: 1.05rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .feedback.correct .verdict { color: var(--correct); }
+  .feedback.wrong .verdict { color: var(--wrong); }
+  .summary-bar { width: 100%; max-width: 900px; background: var(--stone-lightest); border-radius: 14px; padding: 14px 20px; margin-top: 18px; box-shadow: var(--shadow); display: flex; justify-content: space-around; font-weight: 700; color: var(--stone-darker); flex-wrap: wrap; gap: 10px; }
+  .summary-bar .stat { text-align: center; }
+  .summary-bar .stat .num { font-size: 1.4rem; display: block; }
+  .summary-bar .correct-num { color: var(--correct); }
+  .summary-bar .wrong-num { color: var(--wrong); }
+
+  .top-actions { width: 100%; max-width: 900px; display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px; }
+  button.reset-btn { background: var(--wrong); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.2s ease, transform 0.1s ease; }
+  button.reset-btn:hover { background: #93321f; transform: translateY(-1px); }
+  button.finish-btn { background: var(--correct); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.2s ease, transform 0.1s ease; }
+  button.finish-btn:hover { background: #3d6339; transform: translateY(-1px); }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(47,43,39,0.55); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 100; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: var(--stone-lightest); border-radius: 16px; padding: 28px; max-width: 420px; width: 100%; box-shadow: var(--shadow); text-align: center; }
+  .modal-box h3 { margin-top: 0; color: var(--stone-darker); }
+  .modal-box p { color: var(--stone-dark); line-height: 1.5; }
+  .modal-actions { display: flex; justify-content: center; gap: 12px; margin-top: 20px; }
+  .modal-actions button { padding: 10px 22px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; }
+  .modal-actions .confirm-btn { background: var(--wrong); color: #fff; }
+  .modal-actions .cancel-btn { background: var(--stone-light); color: var(--stone-darker); }
+
+  #resultsPage { display: none; width: 100%; max-width: 900px; }
+  #resultsPage.show { display: block; }
+  .results-hero { background: var(--stone-lightest); border-radius: 18px; box-shadow: var(--shadow); padding: 32px; border: 1px solid var(--stone-light); text-align: center; margin-bottom: 20px; }
+  .results-hero .score-circle { width: 140px; height: 140px; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; flex-direction: column; background: conic-gradient(var(--correct) calc(var(--pct, 0) * 1%), var(--stone-light) 0); box-shadow: inset 0 0 0 8px var(--stone-lightest); }
+  .results-hero .score-circle .pct-num { font-size: 1.8rem; font-weight: 800; color: var(--stone-darker); }
+  .results-hero .score-circle .pct-label { font-size: 0.75rem; color: var(--stone-dark); font-weight: 700; }
+  .results-hero h2 { margin: 8px 0 4px; color: var(--stone-darker); }
+  .results-hero .status-line { font-size: 1.15rem; font-weight: 800; margin-bottom: 4px; }
+  .results-hero .status-line.pass { color: var(--correct); }
+  .results-hero .status-line.fail { color: var(--wrong); }
+  .results-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-top: 20px; }
+  .results-stats-grid .rs-item { background: rgba(255,255,255,0.5); border-radius: 12px; padding: 14px; }
+  .results-stats-grid .rs-item .rs-num { font-size: 1.5rem; font-weight: 800; display: block; }
+  .results-actions { display: flex; justify-content: center; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
+  .results-detail { background: var(--stone-lightest); border-radius: 18px; box-shadow: var(--shadow); padding: 24px; border: 1px solid var(--stone-light); }
+  .results-detail h3 { margin-top: 0; color: var(--stone-darker); }
+  .result-row { border: 2px solid var(--stone-light); border-radius: 12px; padding: 16px; margin-bottom: 14px; background: #fffdf9; }
+  .result-row.is-correct { border-color: var(--correct); background: var(--correct-bg); }
+  .result-row.is-wrong { border-color: var(--wrong); background: var(--wrong-bg); }
+  .result-row.is-unanswered { border-color: var(--stone); background: #fff; }
+  .result-row .rr-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  .result-row .rr-num { font-weight: 800; color: var(--stone-darker); }
+  .result-row .rr-badge { font-weight: 800; font-size: 0.8rem; padding: 3px 12px; border-radius: 20px; }
+  .result-row.is-correct .rr-badge { background: var(--correct); color: #fff; }
+  .result-row.is-wrong .rr-badge { background: var(--wrong); color: #fff; }
+  .result-row.is-unanswered .rr-badge { background: var(--stone); color: #fff; }
+  .result-row .rr-q { font-weight: 500; margin-bottom: 8px; line-height: 1.4; }
+  .result-row .rr-ans { font-size: 0.92rem; margin-bottom: 4px; }
+  .result-row .rr-reason { font-size: 0.9rem; margin-top: 8px; color: var(--stone-dark); }
+  .filter-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-row button { border: 2px solid var(--stone); background: var(--stone-lightest); color: var(--stone-darker); padding: 6px 16px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+  .filter-row button.active { background: var(--stone-darker); color: var(--sun-light); }
+
+  @media (max-width: 600px) { .card { padding: 20px; } header h1 { font-size: 1.4rem; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>&#9728;&#65039; Claude Certified Developer &mdash; Practice Review</h1>
+  <p>53 Questions &middot; Choose an answer and submit to see if you're correct</p>
+</header>
+
+<div class="top-actions">
+  <button class="finish-btn" id="finishBtn">&#127942; Finish &amp; See Summary</button>
+  <button class="reset-btn" id="resetBtn">&#8635; Reset / Restart</button>
+</div>
+
+<div class="progress-wrap" id="progressWrap">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+
+<div class="nav-grid" id="navGrid"></div>
+
+<div class="card" id="card">
+  <span class="q-label" id="qLabel">Question 1 of 53</span>
+  <div class="q-text" id="qText"></div>
+  <div class="options" id="options"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="btn-row">
+    <button class="action" id="prevBtn">&larr; Previous</button>
+    <button class="action submit-btn" id="submitBtn">Submit Answer</button>
+    <button class="action" id="nextBtn">Next &rarr;</button>
+  </div>
+</div>
+
+<div class="summary-bar" id="summaryBar">
+  <div class="stat"><span class="num" id="answeredCount">0</span>Answered</div>
+  <div class="stat"><span class="num correct-num" id="correctCount">0</span>Correct</div>
+  <div class="stat"><span class="num wrong-num" id="wrongCount">0</span>Incorrect</div>
+</div>
+
+<div id="resultsPage">
+  <div class="results-hero">
+    <div class="score-circle" id="scoreCircle">
+      <span class="pct-num" id="scorePctNum">0%</span>
+      <span class="pct-label">SCORE</span>
+    </div>
+    <div class="status-line" id="statusLine">&nbsp;</div>
+    <h2>Exam Summary</h2>
+    <div class="results-stats-grid">
+      <div class="rs-item"><span class="rs-num" id="rsTotal">0</span>Total Questions</div>
+      <div class="rs-item"><span class="rs-num" id="rsAnswered">0</span>Answered</div>
+      <div class="rs-item"><span class="rs-num" style="color:var(--correct)" id="rsCorrect">0</span>Correct</div>
+      <div class="rs-item"><span class="rs-num" style="color:var(--wrong)" id="rsWrong">0</span>Incorrect</div>
+      <div class="rs-item"><span class="rs-num" id="rsUnanswered">0</span>Unanswered</div>
+    </div>
+    <div class="results-actions">
+      <button class="action" id="reviewBtn">&#128269; Review Answers Below</button>
+      <button class="action reset-btn" id="resetFromResultsBtn">&#8635; Reset / Restart</button>
+    </div>
+  </div>
+
+  <div class="results-detail" id="reviewSection">
+    <h3>Detailed Results</h3>
+    <div class="filter-row">
+      <button class="active" data-filter="all">All (<span id="cntAll">0</span>)</button>
+      <button data-filter="correct">Correct (<span id="cntCorrect">0</span>)</button>
+      <button data-filter="wrong">Incorrect (<span id="cntWrong">0</span>)</button>
+      <button data-filter="unanswered">Unanswered (<span id="cntUnanswered">0</span>)</button>
+    </div>
+    <div id="resultRows"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="resetModal">
+  <div class="modal-box">
+    <h3>Reset the exam?</h3>
+    <p>This will clear all your selected answers and submitted results, and start over from Question 1. This cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="cancel-btn" id="cancelResetBtn">Cancel</button>
+      <button class="confirm-btn" id="confirmResetBtn">Yes, Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="finishModal">
+  <div class="modal-box">
+    <h3>Finish the exam?</h3>
+    <p id="finishModalText">You're about to see your final summary. You can still come back and review individual questions afterward.</p>
+    <div class="modal-actions">
+      <button class="cancel-btn" id="cancelFinishBtn">Keep Going</button>
+      <button class="confirm-btn" style="background:var(--correct)" id="confirmFinishBtn">Yes, Finish</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [{"number": 1, "question": "You are writing a system prompt for a Claude application that needs to produce output in a specific JSON shape. The downstream system will reject any output that does not match the schema. Your prompt would need to...", "options": {"A": "instruct Claude to return JSON sometimes and free text other times so the application's output captures both formats.", "B": "include explicit constraints describing the required JSON schema and an instruction to produce only output matching that schema.", "C": "omit any reference to the format and rely on a post-processing step in the application to reshape Claude's output.", "D": "instruct Claude to use whichever output format it considers most appropriate for each request the application handles."}, "selected": "B", "correct": "B", "reason": "Explicit schema constraints in the prompt directly guide the model to produce compliant output; the other options either introduce inconsistency, rely on fragile post-processing, or abdicate format control entirely."}, {"number": 2, "question": "Your Claude application's error handling currently logs every API error with the same severity level. The team wants to differentiate between errors that should page an on-call engineer and errors that should be logged for later review. How would you structure the error handling?", "options": {"A": "Categorize errors by severity based on impact and recoverability, then route each category to the appropriate channel for paging or logging.", "B": "Page on every error, on the grounds that paging guarantees that no error is missed by the team during normal operation across the application's lifecycle.", "C": "Log every error with the same severity, on the grounds that differentiating severity adds complexity that does not pay off in most application setups over time.", "D": "Disable logging for any error that does not page, treating non-paging errors as not worth recording for later review either."}, "selected": "A", "correct": "A", "reason": "Categorizing errors by severity and impact enables proper triage, matching the requirement to differentiate paging vs. logging; the alternatives either over-alert, under-differentiate, or lose data."}, {"number": 3, "question": "Your agent makes 10 to 15 tool calls per task, and you have noticed it sometimes loses track of earlier results by the time it reaches later steps. The agent's context window is large enough to hold all the messages, but the relevant information appears to get buried as the conversation grows. How would you address this?", "options": {"A": "Switch to a different agentic framework that advertises automatic context-window management as a built-in feature.", "B": "Apply a context-management pattern that summarizes or prunes older tool outputs while preserving the active task state.", "C": "Reduce the number of tool calls per task by combining several existing tools into larger, multi-purpose tools.", "D": "Increase the context window further so all tool outputs from every prior step remain in full detail throughout the task."}, "selected": "C", "correct": "B", "reason": "The core issue is context dilution/burying, which is directly addressed by summarization/pruning (context management), not merely by reducing tool call count or window size, which don't fix information getting buried."}, {"number": 4, "question": "You are setting up Claude Code for a new project repository. Your team has shared coding standards, preferred libraries, and project-specific context that every developer working on the repository should have available when they use Claude Code. How would you set this up?", "options": {"A": "Add the coding standards and project context to the repository's existing README file and direct developers to reference it when starting Claude Code sessions.", "B": "Configure Claude Code through environment variables that each developer sets on their own machine when they begin working in the repository.", "C": "Document the standards in a separate wiki page maintained outside the repository so the documentation stays decoupled from the source code.", "D": "Initialize Claude Code in the repository and document the standards and project-specific context in a CLAUDE.md file at the repository root."}, "selected": "D", "correct": "D", "reason": "CLAUDE.md is Claude Code's designated mechanism for persistent, automatically-loaded project context and standards, ensuring consistency across all developers using the repo."}, {"number": 5, "question": "You are designing a Claude application that helps medical researchers analyze differential diagnoses by considering symptom patterns, weighing evidence across competing hypotheses, and showing intermediate reasoning steps before producing a final recommendation. The team is choosing among Claude's available model options. The model option best suited to this use case is...", "options": {"A": "extended thinking, which lets the model reason through the differential diagnosis steps before producing the final recommendation.", "B": "zero-shot prompting alone with no model option adjustments, which keeps the application's configuration as simple as possible.", "C": "a smaller model with a tighter context window, which encourages the model to focus its limited capacity on the task.", "D": "fast mode, which prioritizes lowest possible latency at the expense of reasoning depth on complex tasks."}, "selected": "A", "correct": "A", "reason": "Extended thinking is designed exactly for multi-step reasoning tasks requiring weighing evidence and showing intermediate steps, unlike the other options which sacrifice reasoning depth or simplicity at the cost of quality."}, {"number": 6, "question": "Your Claude application returns confident-sounding answers, but occasionally those answers contain factual errors that downstream systems treat as ground truth. The team is concerned about the application's confidence-versus-accuracy gap. How would you address the gap?", "options": {"A": "Reject every response the application produces until a manual accuracy review is conducted on each response by a human reviewer before any downstream system uses it.", "B": "Apply skepticism toward confident output by adding validation steps, sourcing requirements, or confidence calibration before treating outputs as ground truth.", "C": "Add a disclaimer to every output telling users to verify the accuracy of the output and treat the disclaimer as the primary mechanism for managing the confidence-versus-accuracy gap.", "D": "Lower the model's temperature so the model's responses sound less confident and downstream systems are less likely to treat the responses as ground truth in normal operation."}, "selected": "B", "correct": "B", "reason": "Adding validation, sourcing, and confidence calibration systematically addresses the accuracy gap; manual review of everything doesn't scale, disclaimers alone don't fix the underlying gap, and temperature does not affect factual accuracy."}, {"number": 7, "question": "Your Claude application has been running for several conversation turns and you notice the model occasionally references information that was discussed many turns ago but is no longer relevant. You suspect context drift is causing the model to weight stale content too heavily. How would you address the drift?", "options": {"A": "Reset the conversation after every turn so the model loses all prior turns when generating a response.", "B": "Apply compaction to summarize older portions of the conversation so the gist remains while the specifics carry less weight.", "C": "Truncate the conversation so the model sees only the most recent turn during each subsequent response.", "D": "Increase the context window size so all turns of the conversation remain visible to the model in full detail."}, "selected": "B", "correct": "B", "reason": "Compaction preserves useful gist while de-emphasizing stale specifics, directly countering drift, whereas resetting/truncating lose needed context and increasing window size does not fix weighting of stale info."}, {"number": 8, "question": "A teammate has asked why your Claude application sometimes produces a response that includes the prompt text rephrased, and other times produces a response with the prompt text repeated back, and other times produces a response with the prompt text rephrased. They suspect a bug in the application's request construction. How would you respond?", "options": {"A": "Tell the teammate that the variation is caused by the application sending two different prompts on different runs and propose a code change that pins the system prompt to a single version.", "B": "Confirm that the variation is a bug in the application's request construction and start investigating which part of the application is producing the inconsistent prompt text.", "C": "Tell the teammate that the variation depends on which Claude model serves the request, and recommend pinning the application to a single model version to make the output behavior consistent.", "D": "Explain that LLMs generate output token by token, and variation in how prompt content appears in output is a property of generation, not a bug in request construction."}, "selected": "C", "correct": "D", "reason": "Output variability across identical prompts is an inherent property of LLM sampling/token-by-token generation, not a request-construction bug or purely a model-version issue; option D correctly identifies the root cause."}, {"number": 9, "question": "Your Claude agent performs database operations. A recent incident occurred where the agent ran a destructive query that affected production data. The team wants to add deterministic controls to prevent similar incidents. How would you prevent similar incidents?", "options": {"A": "Switch to a higher-capability Claude model on the grounds that a more capable model is less likely to run destructive queries during normal operation across all requests.", "B": "Add a system prompt instruction telling the agent to be careful with database operations on every request the application handles during normal operation across all incoming traffic.", "C": "Add Claude hooks that intercept database operations and apply deterministic checks, such as blocking destructive queries or requiring approval, before the queries execute.", "D": "Run the agent only during business hours when humans are available to monitor its activity, treating the schedule as the primary control mechanism for destructive operations."}, "selected": "C", "correct": "C", "reason": "Deterministic hooks that intercept and block/require approval for destructive queries provide a hard guarantee, unlike prompt instructions (probabilistic) or model choice/scheduling, which don't reliably prevent destructive actions."}, {"number": 10, "question": "Your Claude application uses tool calling to fetch patient data and generate summary reports. The team occasionally sees the model returns a tool_use block that references arguments not present in the schema, and your application code does not handle this case gracefully. How would you address this?", "options": {"A": "Retry the same request repeatedly until the model returns a valid tool_use block that matches the schema as expected.", "B": "Validate the tool_use block's arguments against the tool schema before dispatching the tool and handle invalid arguments as a recognized error path.", "C": "Log invalid tool_use blocks when they occur and allow the tool dispatch to proceed, relying on the tool's own error handling to surface failures.", "D": "Stop using tool calling entirely and replace tools with prompted text generation that asks the model to describe what it would do."}, "selected": "B", "correct": "B", "reason": "Explicit schema validation before dispatch with a defined error path is the robust engineering solution; blind retrying, unsafe dispatch, or abandoning tool calling are all worse approaches."}, {"number": 11, "question": "You are building an agent that needs to call several internal APIs and a database in a structured, repeatable way. Your team may decide to use the Claude Agent SDK rather than build a custom loop. You are setting up the agent's tool definitions and execution loop. How would you set up the tools and execution loop?", "options": {"A": "Use the SDK's tool interface and write the loop and history layer in the team's own code.", "B": "Use the SDK's tool interface and let the SDK handle the loop, dispatch, and history.", "C": "Call the Messages API directly and let the model format its tool calls in plain text.", "D": "Use the SDK's tool interface and loop, with conversation history stored in a separate team database."}, "selected": "B", "correct": "B", "reason": "Using the SDK's built-in loop, dispatch, and history management avoids reinventing agentic infrastructure, which is precisely what the SDK is designed to provide."}, {"number": 12, "question": "Your application uses the Messages API to handle multi-turn conversations. Each new turn resends the entire conversation history, and your token costs are growing as conversations get longer. You suspect there is a more efficient approach. How would you address this?", "options": {"A": "Summarize each conversation after every turn and replace the full history with the summary on the next request, reducing token count at the cost of fidelity.", "B": "Truncate every conversation to the last two messages so that token usage stays low and costs remain predictable across the application's normal operation.", "C": "Switch to the batch API for every turn so the per-call cost is reduced, treating the batch as the team's primary cost-control mechanism for multi-turn work.", "D": "Use prompt caching to reuse the static portions of the conversation context across turns instead of paying for them on every request the application sends."}, "selected": "D", "correct": "D", "reason": "Prompt caching directly reduces the token cost of resending unchanged conversation history without losing fidelity, unlike summarization (loses information), truncation (loses context), or batch API (wrong use case, not built for interactive turns)."}, {"number": 13, "question": "You are designing an agent that processes vendor invoices. The work involves a small number of well-understood steps, but occasionally an invoice arrives in an unexpected format that requires the system to decide between rerouting, requesting clarification, or flagging for human review. The most appropriate architecture for this system is...", "options": {"A": "a fully autonomous agent that handles every invoice from start to finish across all formats.", "B": "a single large prompt that processes every incoming invoice, both standard and unexpected, in one model call.", "C": "a workflow for the standard path with an agent invoked at the decision point for unexpected formats.", "D": "a manager agent that delegates each step of standard invoice processing to a dedicated subagent, with a separate subagent handling each unexpected format."}, "selected": "C", "correct": "C", "reason": "Combining a deterministic workflow for the well-understood path with agent invocation only at the decision point matches the actual complexity profile; full autonomy or manager/subagent architectures are overengineered for mostly-standard work."}, {"number": 14, "question": "Your team is debating how to manage the prompts used in your Claude application. Some prompts are checked into the code repository, some live in a separate configuration file, and some are constructed inline at runtime. The result is inconsistent, and a recent prompt change went out without code review. What steps would you take?", "options": {"A": "Move all prompts to inline runtime construction so the team can update them quickly through a streamlined process outside the standard code review workflow.", "B": "Establish a single source of truth for prompts, version-control them alongside code, and require code review for prompt changes.", "C": "Move all prompts out of version control to a separate spreadsheet that team members can edit freely as the application evolves over time.", "D": "Establish a single source of truth for prompts but keep change review optional, allowing developers to update prompts directly when changes are urgent."}, "selected": "B", "correct": "B", "reason": "Version-controlling prompts with mandatory code review directly fixes the inconsistency and the unreviewed-change problem; the other options either bypass review or make prompts harder to track."}, {"number": 15, "question": "Your Claude application processes 50-page legal contracts and produces summaries with citation references back to the source. The team is debating whether to send each contract whole or split into smaller pieces. The contracts fit within Claude's context window. Initial testing shows that whole-document processing produces stronger cross-section reasoning but occasionally drifts on citation accuracy in later sections. Chunked processing produces summaries with stronger citation accuracy per chunk but loses cross-section reasoning. The team has not decided which property matters more. How would you guide the team's decision?", "options": {"A": "Assess the cost and latency implications of both approaches against the application's performance requirements before recommending which processing strategy to adopt.", "B": "Review the citation accuracy results from chunked processing and determine whether the loss of cross-section reasoning produces summaries that still meet the application's quality bar.", "C": "Identify which property matters more for the application's actual use case and let that decision drive the chunking approach, then validate the choice against representative contracts.", "D": "Examine the use cases where cross-section reasoning failures occur and assess whether whole-document processing meets the application's accuracy requirements across a representative sample of contracts."}, "selected": "D", "correct": "C", "reason": "The team hasn't decided which quality property (citation accuracy vs. cross-section reasoning) matters most for the use case — that decision must come first, then validate with representative contracts, rather than jumping straight to validating one specific approach."}, {"number": 16, "question": "You are choosing a Claude model for a high-volume classification task. Each classification is straightforward, latency requirements are tight, and per-request cost matters at scale. Which model would you choose?", "options": {"A": "A smaller, faster Claude model, because the task is straightforward and the workload prioritizes latency and per-request cost at scale.", "B": "Multiple Claude models in series, where each request runs through more than one model and the application combines the outputs into a final classification.", "C": "A mid-tier Claude model selected by default, because mid-tier models balance quality and cost in a way the team can apply across most tasks.", "D": "The largest, highest-capability Claude model, to maximize quality on every classification the application produces during normal operation across all requests."}, "selected": "A", "correct": "A", "reason": "For straightforward, high-volume, latency- and cost-sensitive tasks, a smaller/faster model is the right fit — matching model capability to task complexity is a core best practice, not defaulting to biggest or most complex options."}, {"number": 17, "question": "Your team uses several plugins across multiple Claude applications, and a recent plugin update introduced a regression. The team had not been tracking plugin versions, so the team cannot easily identify which version was previously working. How would you address this?", "options": {"A": "Add explicit plugin version tracking to the project's configuration so the team can identify, pin, and upgrade plugin versions deliberately.", "B": "Treat plugins as untrackable third-party code and rely on plugin authors to communicate breaking changes when they happen, with no internal version tracking.", "C": "Stop using all plugins until the team can rebuild equivalent functionality directly into the application code, treating plugin avoidance as a way to remove version-related risk.", "D": "Upgrade every plugin to the latest version on a regular cadence to keep version drift small, on the grounds that drift contributes to regression risk."}, "selected": "A", "correct": "A", "reason": "Explicit version tracking/pinning directly solves the root problem — inability to identify and roll back to a known-good version — without the cost of abandoning plugins or blindly auto-upgrading."}, {"number": 18, "question": "You are building a Claude application that processes 10,000 customer emails overnight to extract structured data. The work is non-interactive, runs once daily, and has a flexible completion window of several hours. Which Claude API would you use?", "options": {"A": "The batch API, which is designed for non-interactive workloads with flexible completion windows.", "B": "The realtime Messages API with concurrent requests to process the emails as fast as possible during the overnight window.", "C": "The realtime Messages API processing the emails one at a time sequentially to ensure consistent ordering of results.", "D": "The streaming responses API to process each email and return partial results to a database as the model generates them."}, "selected": "A", "correct": "A", "reason": "The batch API is purpose-built for exactly this scenario — large volume, non-interactive, flexible completion window — at lower cost than realtime processing."}, {"number": 19, "question": "A teammate has asked how the Claude SDK handles transient API errors, such as a temporary network issue or a brief rate-limit response. They want to know whether the application code needs to handle every transient error or whether the SDK provides any default behavior. How would you describe the SDK's default behavior?", "options": {"A": "The SDK provides default retry behavior for many transient errors, and the application code can configure or extend that behavior as needed.", "B": "The SDK logs transient errors to a default error stream and continues execution without retrying, leaving the application code responsible for detecting and responding to failed calls.", "C": "The SDK provides default retry behavior for transient errors up to a fixed number of attempts and this behavior is not configurable.", "D": "The SDK provides default retry behavior for network errors but surfaces rate-limit responses directly to the application code, which must implement its own retry logic for those cases."}, "selected": "A", "correct": "A", "reason": "The Claude SDKs provide built-in, configurable default retry behavior for transient errors including rate limits and network issues, which the application can further customize."}, {"number": 20, "question": "You are designing a Claude application that will require structured JSON output for downstream processing. The output schema is well-defined, and downstream systems will reject malformed JSON. Your application design would...", "options": {"A": "structure the prompt to request output in a schema that is described in plain English, with downstream systems parsing whatever shape Claude produces.", "B": "define a clear schema, structure the prompt to request output in that schema, and validate Claude's output against the schema before passing it downstream.", "C": "define a clear schema and structure the prompt to request output in that schema, with downstream systems handling any validation needed.", "D": "avoid structured output and use free-form text everywhere instead, on the grounds that free-form text is more flexible and handles edge cases better than structured schemas."}, "selected": "B", "correct": "B", "reason": "Defining a schema, prompting for it, and validating before passing downstream provides the full closed-loop safety needed when malformed JSON is rejected — validation must happen at the source, not left entirely to downstream systems."}, {"number": 21, "question": "Your team is preparing a new Claude application for production and the product team has asked for a cost projection. The team needs to estimate the cost based on expected request volume, average input length, and average output length. How would you build the projection?", "options": {"A": "Build a cost model that combines expected request volume and average input tokens, treating output tokens as a small enough share of cost to leave out of the projection.", "B": "Build a cost model that combines expected request volume, average input tokens, average output tokens, the chosen model's pricing, and any caching benefits.", "C": "Build a cost model that uses the average per-request cost from a similar Claude application the team built last year, scaling that figure by expected request volume.", "D": "Build a cost model based on expected request volume and the chosen model's pricing, treating average input and output token counts as variables to be estimated post-launch."}, "selected": "D", "correct": "B", "reason": "A proper cost projection must account for all relevant factors given (volume, input/output tokens, pricing, caching) rather than omitting output tokens, deferring token estimates, or relying on an unrelated prior application's costs."}, {"number": 22, "question": "A teammate has asked how to extend Claude Code with a custom Skill that the team can invoke during sessions. The Skill consists of a set of instructions and a few support scripts the team wants Claude to be able to call when the Skill is loaded. Where is the right place to define the Skill?", "options": {"A": "Define the Skill inside the application's source code as a regular library module and call it from the application code instead of from Claude Code.", "B": "Define the Skill in a personal scratch directory on each developer's machine and load it manually before each Claude Code session that needs it.", "C": "Define the Skill in a Skills directory recognized by Claude Code, where Claude can discover and load it during sessions for the team's repositories.", "D": "Define the Skill as a long inline instruction at the top of every CLAUDE.md file in the team's repositories so Claude has access to it on every session."}, "selected": "C", "correct": "C", "reason": "Claude Code Skills are meant to live in a recognized Skills directory for automatic discovery and reuse, unlike ad hoc personal directories, source-code modules, or bloating CLAUDE.md with inline instructions."}, {"number": 23, "question": "A new agent your team built handles customer support tickets, but it routinely gets confused when a single ticket spans billing, shipping, and product issues. The agent often loses track of which sub-issue it has already addressed and revisits the same one. The team is considering architectural changes. What architectural change would you recommend?", "options": {"A": "Increase the size of the agent's context window so it can hold the full ticket history at once.", "B": "Introduce a orchestrator agent that delegates billing, shipping, and product sub-issues to a dedicated subagent.", "C": "Add detailed prompting that instructs the agent to track which sub-issues have been resolved and which remain.", "D": "Switch to a deterministic workflow that handles billing, shipping, and product issues in a fixed sequence."}, "selected": "B", "correct": "B", "reason": "An orchestrator delegating each independent sub-issue to a dedicated subagent cleanly separates state tracking per domain, resolving the confusion; larger context or prompting alone doesn't fix the structural issue, and a fixed sequence is too rigid for tickets that may not need every category."}, {"number": 24, "question": "Your Claude application runs long agentic workflows where the agent makes many tool calls, and the conversation history grows quickly. After about 20 tool calls, you notice the agent's responses become less focused and sometimes ignore earlier task constraints. How would you address this?", "options": {"A": "Increase the model's context window so the agent can hold every tool output at full detail across the entire workflow no matter how many tool calls it accumulates.", "B": "Remove tool calling from the workflow entirely so the agent operates as a single text-generation step with no tool outputs accumulating in the context window.", "C": "Restart the agent every five tool calls to prevent any drift, with the agent losing all task state at each restart point during the workflow.", "D": "Apply context engineering techniques such as tool output pruning or compaction to keep the active task state visible while reducing the volume of older content."}, "selected": "D", "correct": "D", "reason": "Pruning/compaction directly reduces noise while preserving essential task state, addressing focus loss without losing all history (as in restarting) or removing tool use altogether or relying on ever-larger windows."}, {"number": 25, "question": "Your team uses Claude Code across multiple repositories. You want the team's rules and general coding standards to apply to all repositories, and other rules to apply only to specific repositories. The team is currently duplicating instructions across every repository's CLAUDE.md file. How would you address this?", "options": {"A": "Stop using CLAUDE.md altogether and ask each developer to configure Claude Code manually for each project they work on.", "B": "Move all instructions to a separate documentation site that developers consult during Claude Code sessions across all repositories.", "C": "Use a CLAUDE.md hierarchy that scopes general standards broadly and project-specific context within each repository's local CLAUDE.md.", "D": "Use a single repository's CLAUDE.md as the central source of truth and link to it from every other repository's CLAUDE.md file."}, "selected": "C", "correct": "C", "reason": "A hierarchical CLAUDE.md setup (broad/general + local/project-specific) eliminates duplication while preserving both shared standards and per-repo context, unlike abandoning CLAUDE.md or external docs or cross-linking a single repo's file."}, {"number": 26, "question": "Your Claude application requests structured JSON output from the model. Most of the time the JSON is well-formed, but occasionally Claude returns malformed JSON that breaks downstream processing. How would you handle the malformed output?", "options": {"A": "Manually inspect every response before downstream processing so a human reviewer catches any malformed JSON before the application passes the response to downstream systems.", "B": "Retry the same request repeatedly until valid JSON appears in the model's response, with the retry loop adding delay to the application's response time on affected requests.", "C": "Switch to free-form text output so the application no longer depends on JSON parsing for any of the responses it sends downstream during normal operation.", "D": "Add output validation that parses Claude's response against the expected schema and treats malformed output as a recognized error path with retry or fallback handling."}, "selected": "D", "correct": "D", "reason": "Schema validation with defined retry/fallback error handling directly and scalably addresses occasional malformed output, unlike manual review (doesn't scale), blind retry loops (no guarantee, adds latency), or abandoning structured output entirely."}, {"number": 27, "question": "Your Claude agent has too many tools, and many of them have overlapping functionality. The agent often picks an inappropriate tool when several could plausibly handle a request. How would you address the tool selection problem?", "options": {"A": "Add more tools to cover every variation of the requests the agent handles, on the grounds that more tools give the agent more accurate options to choose from.", "B": "Restructure the tool set by consolidating overlapping tools, removing unused tools, and clarifying tool descriptions so each tool has a distinct purpose.", "C": "Add detailed examples to each tool's description so the agent can match incoming requests to the right tool by example, treating the examples as the team's selection mechanism.", "D": "Remove all tools and rely on the agent's general capability instead, with the application losing the workflows that previously relied on tools."}, "selected": "B", "correct": "B", "reason": "Consolidating overlapping tools and clarifying distinct purposes directly reduces selection ambiguity; adding more tools worsens overlap, and removing all tools discards needed functionality."}, {"number": 28, "question": "Your Claude application's outputs are inconsistent in format. The team's instructions are scattered across the system prompt and user messages, with some instructions stated only once and others repeated. How would you fix the inconsistency?", "options": {"A": "Place each instruction wherever the developer who first wrote it found most natural, retaining the original intent.", "B": "Consolidate behavioral and format instructions in the system prompt and keep user messages focused on the user's input.", "C": "Repeat all instructions in both the system prompt and the user message so the model sees each instruction more than once.", "D": "Move all instructions into the user message so the application's behavior is controlled at the input point."}, "selected": "B", "correct": "B", "reason": "Consolidating behavioral/format instructions in the system prompt (with user messages carrying only the actual input) is standard prompt engineering practice that eliminates the scattering/duplication causing inconsistency."}, {"number": 29, "question": "You are building an MCP server that exposes several internal data sources as MCP resources. The server needs to be deployed so multiple Claude applications can integrate with it. How would you approach the build and deployment?", "options": {"A": "Deploy the MCP server only on individual developer machines, with the Claude applications unable to reach the server outside each developer's machine.", "B": "Build the MCP server with resource and tool definitions scoped to the first Claude application that needs it, and extend the definitions to additional applications as each integration is requested.", "C": "Bypass the MCP server and embed each data source directly in every Claude application that needs the data, with each application maintaining its own integration.", "D": "Author the server with clearly defined resources, tools, and prompts, choose a communication pattern, and deploy to an accessible hosting environment."}, "selected": "D", "correct": "D", "reason": "Properly authoring an MCP server with well-defined resources/tools/prompts and deploying to an accessible shared environment is the correct approach for multi-application reuse, unlike per-developer-only deployment, ad hoc scoping, or bypassing MCP entirely."}, {"number": 30, "question": "You have just shipped a new Claude-powered application to production. The development phase is complete, and the system is now in active use by internal teams. The next phase of work for this system is...", "options": {"A": "operating and maintaining the system, including monitoring, responding to issues, and planning evolution.", "B": "running a formal post-deployment review that assesses the development phase before the team does any further work on the system.", "C": "handing the system over to a separate operations team that will manage it independently of the development team going forward.", "D": "retiring the system, since shipping is the final lifecycle stage for any application that reaches production."}, "selected": "A", "correct": "A", "reason": "After shipping, the natural next lifecycle phase is ongoing operation and maintenance — monitoring, incident response, and iterative improvement — not a one-time review, full handoff, or retirement."}, {"number": 31, "question": "Your Claude application receives untrusted input from external sources. The team is establishing how the application should treat this untrusted input. Untrusted input would be...", "options": {"A": "validated and sanitized before being incorporated into prompts, and treated as data the model should not interpret as instructions.", "B": "routed through a separate Claude application with more lax security controls so the original application does not handle the untrusted input directly.", "C": "blocked entirely so the application accepts only trusted input, with no path for legitimate external input the application might process.", "D": "treated identically to trusted input from internal sources, on the grounds that all input the application receives can be handled the same way."}, "selected": "A", "correct": "A", "reason": "Treating untrusted input as data (not instructions) and validating/sanitizing it is the standard security best practice against prompt injection, unlike offloading risk elsewhere, blocking all external input, or treating it as equally trusted."}, {"number": 32, "question": "A Claude application that worked well in testing is now occasionally returning outputs that mention information not present in the input. The development team initially assumed the model was hallucinating so they asked you to troubleshoot. What would you do first?", "options": {"A": "Apply a retrieval-augmented generation pattern to ground the responses in source content before any further investigation of the production traces.", "B": "Examine production traces to identify whether the issue is hallucination by the model, context loss, prompt injection, or another failure mode before recommending a fix.", "C": "Replace the current model with a larger one to reduce the chance of hallucination, on the grounds that larger models tend to hallucinate less in typical applications.", "D": "Add a system prompt instruction telling the model not to invent information, on the grounds that prompt-level instructions are the fastest fix for hallucination concerns."}, "selected": "B", "correct": "B", "reason": "Diagnosing the actual root cause via production traces before acting is the correct debugging discipline — jumping to a fix (RAG, bigger model, prompt tweak) without confirming the failure mode risks solving the wrong problem."}, {"number": 33, "question": "Your team is integrating Claude into an existing REST API service. The service handles concurrent requests, and you are deciding how to structure the Claude API calls within the existing async codebase. How would you structure the Claude calls?", "options": {"A": "Use the Claude SDK's async client and structure Claude calls as awaitable operations alongside the rest of the service's async code.", "B": "Replace the existing async REST service with a synchronous service to match the call style of synchronous Claude SDK clients.", "C": "Make synchronous Claude API calls and block the async event loop until each call completes before processing the next request.", "D": "Run Claude API calls in a separate thread pool isolated from the rest of the service so the main event loop is not affected."}, "selected": "A", "correct": "A", "reason": "Using the SDK's async client keeps calls consistent with the existing async architecture without blocking the event loop, unlike synchronous blocking calls, an unnecessary rewrite, or an unneeded separate thread pool."}, {"number": 34, "question": "You are designing a Claude application that processes user-submitted text. Some of that text could include sensitive information such as account numbers or passwords that the application should not send to Claude. How would you design the application?", "options": {"A": "Apply filtering at the boundary for the most commonly observed sensitive data patterns and expand coverage to additional patterns based on findings from production monitoring.", "B": "Log all user-submitted text before it is sent to Claude and review the logs periodically to identify whether sensitive information is reaching the model.", "C": "Define the application boundary explicitly, identify what content can leave the boundary for Claude, and add filtering or redaction at the boundary.", "D": "Add a prompt instruction in the system prompt specifying the categories of sensitive information Claude should disregard when processing user-submitted text."}, "selected": "C", "correct": "C", "reason": "Explicitly defining the trust boundary and applying filtering/redaction there prevents sensitive data from ever reaching Claude, which is more robust than reactive log review, iterative-only pattern coverage, or relying on prompt instructions (which don't prevent data transmission)."}, {"number": 35, "question": "Your Claude application is deployed to development, staging, and production environments. Each environment uses a different model version, different prompt versions, and different plugin dependencies, but the configuration is currently scattered across environment variables, hardcoded values, and undocumented setup scripts. How would you manage the configuration?", "options": {"A": "Use the latest available model version everywhere and stop pinning model versions, on the grounds that pinning adds maintenance overhead the team should aim to reduce.", "B": "Consolidate the configuration into a version-controlled system documenting model version pinning, prompt versioning, and plugin dependencies for each environment.", "C": "Move all configuration into hardcoded application code to reduce reliance on external configuration sources that are difficult to track over time.", "D": "Standardize all environments to use the same configuration values to eliminate the differences between development, staging, and production."}, "selected": "B", "correct": "B", "reason": "Consolidating scattered configuration into a documented, version-controlled system directly resolves the tracking/consistency problem, unlike unpinning versions, hardcoding, or forcing identical configs across environments with legitimately different needs."}, {"number": 36, "question": "You are setting up a Claude application that requires API keys for several external services. What is the best way to store the keys?", "options": {"A": "Use a single shared key across all external services, so any developer working on the application can find the keys easily during development.", "B": "Put the keys in the application's configuration file and check the configuration file into the team's repository alongside the rest of the source code.", "C": "Email the keys to each developer as needed and have each developer paste the keys into their local environment when they begin working on the application's code.", "D": "Store the keys in a secrets manager or environment-specific configuration that is not checked into source code, and load them at runtime."}, "selected": "D", "correct": "D", "reason": "A secrets manager or environment-based configuration kept out of source control is standard secure credential management, unlike shared keys, committing secrets to the repo, or ad hoc emailing of keys."}, {"number": 37, "question": "The product team has asked you to choose a Claude model for a new feature. The team has provided functional requirements but has not specified performance, cost, or quality targets. The team's product manager says, \"Use whatever model gives us the best results.\" How would you respond?", "options": {"A": "Ask the product team to specify quality, latency, and cost targets, then select the model whose tradeoffs best fit those targets.", "B": "Run every Claude model on a representative sample and pick whichever scores best on a generic benchmark.", "C": "Choose a mid-tier model and ship the feature, because mid-tier models work for most use cases without specified targets.", "D": "Choose the largest, highest-capability Claude model, on the grounds that \"best results\" is most likely to mean highest quality."}, "selected": "A", "correct": "A", "reason": "Model selection requires clarifying the actual quality/latency/cost tradeoffs rather than guessing; the other options substitute assumptions or generic benchmarks for the missing requirements."}, {"number": 38, "question": "You maintain a Claude application that uses Claude Sonnet 4.5 across several production workflows. Your evaluation suite shows Sonnet 4.7 performing 8% better on your highest-volume task. However, this version produces different output formatting on two of your structured-extraction prompts that downstream consumers parse with regex-based code. To roll out the upgrade, you would...", "options": {"A": "adjust the prompts to constrain output format, re-run evals against the expected parsing layer schema, then roll out the model out with a feature flag and the option to revert per workflow.", "B": "keep the older model in production to preserve the fragile parsing layer that may risk breaking with any model change.", "C": "switch the model identifier in the application's configuration to the new model, then monitor production for parsing failures to be fixed as failures surface.", "D": "rewrite the downstream parsing code to accept a wider range of output formats to ensure the application is resilient to future model upgrades without requiring prompt changes."}, "selected": "A", "correct": "A", "reason": "Proactively adjusting prompts and validating against the parsing schema before a controlled, reversible rollout addresses the known formatting risk directly, unlike never upgrading, upgrading blind and fixing reactively, or a broader rewrite that doesn't address the immediate compatibility issue."}, {"number": 39, "question": "Your agent is processing tasks that take 30 to 60 minutes to complete. Each task has well-defined intermediate checkpoints, and the team wants the agent to be able to resume from the most recent checkpoint if a process is interrupted. How would you implement this resumability?", "options": {"A": "Apply a checkpointing pattern that persists the agent's intermediate state and reloads that state when resuming an interrupted task.", "B": "Increase the agent's timeout to several hours so that interruptions become rare enough to ignore in practice.", "C": "Restart the task from the beginning whenever a process is interrupted.", "D": "Run two copies of the agent in parallel for every task and use whichever one finishes first as the source of truth."}, "selected": "A", "correct": "A", "reason": "Checkpointing that persists and reloads intermediate state is the direct implementation of the requested resumability, unlike hoping interruptions won't happen, wasting all progress on restart, or costly redundant parallel runs."}, {"number": 40, "question": "You are integrating Claude into an application written in Python. The Claude SDK provides a Python client that wraps the underlying REST API. How would you integrate the SDK?", "options": {"A": "Skip the SDK and embed Claude calls in shell commands invoked from Python, so that the application runs the calls outside the main Python process.", "B": "Call the REST API directly with raw HTTP requests so the application avoids the SDK's abstraction between the application code and the API.", "C": "Use a different LLM provider's SDK and translate the responses into Claude's API shape so the application can switch providers in the future.", "D": "Use the Claude Python SDK and let it handle authentication, retries, and response parsing through its standard documented patterns for Python integrations."}, "selected": "D", "correct": "D", "reason": "Using the official SDK's built-in handling of auth, retries, and parsing is the standard, most maintainable approach, unlike bypassing it via shell commands, raw HTTP, or an unrelated provider's SDK with translation overhead."}, {"number": 41, "question": "You are designing a Claude application that will process customer support tickets in two stages: a triage stage that classifies tickets and a response stage that drafts replies. The team is debating whether to use a single Claude call that handles both stages or separate Claude calls for each stage. How would you structure the application?", "options": {"A": "Use multiple Claude calls in parallel that each draft a complete ticket reply, then have a fourth Claude call select the best one to send to the customer.", "B": "Use a single Claude call for both stages, on the grounds that a single call is cheaper than multiple calls in any production Claude application setup.", "C": "Use a single Claude call for triage and then use a non-Claude rule-based system for response generation, on the grounds that rule-based systems are more reliable for drafting replies.", "D": "Use separate Claude calls for triage and response, because each stage has distinct inputs, outputs, and success criteria that benefit from focused prompts."}, "selected": "D", "correct": "D", "reason": "Separating distinct stages with different inputs/outputs/success criteria into focused calls typically improves quality and maintainability, versus forcing one call to do both, unnecessary parallel drafting/selection, or replacing generation with rigid rules unsuited to drafting replies."}, {"number": 42, "question": "The product team has described a new Claude feature in business terms: \"agents should help our analysts produce client memos faster.\" You need to convert this into actionable technical requirements for the engineering team. Your first step would be to...", "options": {"A": "assess what similar agent-based features have been built internally or in the industry and use those precedents to scope the technical approach.", "B": "interpret the functional and infrastructure requirements implied by the business goal.", "C": "ask the analysts about the current memo production process to see where they think Claude could be introduced as a prompt-driven drafting step.", "D": "examine what model capabilities and tier options are available and determine which best supports the memo drafting workflow described by the product team."}, "selected": "B", "correct": "B", "reason": "Translating a vague business goal into functional/infrastructure requirements is the necessary first step before looking at precedents, asking users, or evaluating specific model tiers, all of which are premature without first defining the requirements."}, {"number": 43, "question": "You are deciding between deploying a Claude-powered agent on Anthropic's hosted infrastructure or self-hosting under your own AWS account. The agent processes customer data subject to your enterprise's data residency policies, but the team wants to avoid managing infrastructure. Which deployment model would you recommend?", "options": {"A": "Deploying on Anthropic-hosted infrastructure to meet the team's shipping timeline, and flagging the data residency requirement for a follow-up compliance review after launch.", "B": "Self-hosting under BYOC for an initial pilot, then evaluating whether to migrate to Anthropic-hosted infrastructure once the agent's data handling patterns are better understood.", "C": "Self-hosting under BYOC to satisfy the data residency requirement, while working with the infrastructure team to reduce the operational overhead of managing the deployment.", "D": "Deploying on Anthropic-hosted infrastructure while the team drafts a request to update the enterprise data residency policy to accommodate hosted AI deployments."}, "selected": "C", "correct": "C", "reason": "Data residency is a hard compliance requirement that BYOC satisfies directly; deploying on hosted infrastructure now and dealing with compliance later, or trying to change policy to avoid the requirement, both risk violating existing constraints."}, {"number": 44, "question": "Your Claude application is hitting context window limits when processing long customer service transcripts. A junior developer suggests increasing the temperature parameter to fix the issue. How would you respond?", "options": {"A": "Remove the system prompt entirely to make room for longer transcripts in each request, freeing up context window space the system prompt would otherwise consume.", "B": "Adjust the temperature parameter together with the max_tokens parameter, treating the combined adjustment as the team's mechanism for managing context window pressure during long-transcript processing.", "C": "Increase the temperature parameter as the junior developer suggested and observe whether the context window issue resolves over the next several runs of the application in production.", "D": "Explain that temperature controls sampling randomness and is unrelated to context capacity, then address the context issue through summarization or chunking."}, "selected": "D", "correct": "D", "reason": "Temperature affects output randomness, not context window capacity — the correct response corrects this misconception and points to actual context-management solutions like summarization or chunking."}, {"number": 45, "question": "A Claude application is producing outputs that drift away from the expected JSON format after several conversation turns. The first few turns produce correctly formatted output, but later turns gradually lose structure. How would you address the drift?", "options": {"A": "Switch to a smaller Claude model and re-test the application to determine whether the drift persists across conversation turns.", "B": "Truncate every response to the first few characters, validate that the truncated output matches the expected JSON structure, and log any mismatches for review.", "C": "Restart the application after every turn and monitor whether the format remains consistent across subsequent interactions.", "D": "Identify the failure mode as format drift, examine how the conversation context evolves over turns, and address the drift through context management or output validation."}, "selected": "D", "correct": "D", "reason": "Correctly identifying this as format drift tied to conversation context growth, then applying context management/validation, addresses the root cause, unlike swapping models, truncating output destructively, or restarting every turn (which loses conversation continuity)."}, {"number": 46, "question": "You are implementing a custom tool for your Claude agent. The tool needs to interact with an external pricing service that returns product data. Which of the following best practices would you apply as you develop this tool?", "options": {"A": "Implement the tool with no error handling and let the agent loop catch failures whenever the pricing service returns an error during operation.", "B": "Define the tool with a clear schema, write a precise description for when to call it, and handle pricing service errors explicitly.", "C": "Omit the tool description and let the model infer when to use the tool based on the tool's name and the rest of the prompt context.", "D": "Define the tool with a loose schema and let the model interpret the inputs flexibly on each call the agent makes."}, "selected": "B", "correct": "B", "reason": "Clear schemas, precise descriptions, and explicit error handling are foundational tool-design best practices; omitting error handling, descriptions, or schema precision all increase failure risk."}, {"number": 47, "question": "You are setting up a CI/CD pipeline for a new Claude application. The pipeline needs to run automated checks on every pull request before code can be merged. The CI/CD checks would include...", "options": {"A": "automated tests of the Claude integration, linting, and any other standard quality gates the team applies to its other services.", "B": "automated tests of the Claude integration only, with linting handled separately during local development on each developer's machine.", "C": "automated linting and security scanning, with Claude integration testing handled manually during pre-release verification by a designated reviewer.", "D": "a full end-to-end production deployment on every pull request to catch all possible issues before any code is merged into the main branch."}, "selected": "A", "correct": "A", "reason": "Treating the Claude integration as just another component subject to the team's normal CI quality gates (tests, linting, etc.) is the standard, scalable approach, unlike omitting linting, making integration testing manual, or an excessive full production deploy per PR."}, {"number": 48, "question": "You are extending a Claude agent with a capability that needs to be reusable across multiple teams in the organization, with each team able to invoke and use it independently. How would you build the capability?", "options": {"A": "As a Skill or MCP server because both are purpose-built for cross-team reuse independently by each consuming team.", "B": "As a wrapper around an existing built-in tool that adds the missing functionality, on the grounds that built-in tools cover the reuse pattern when extended carefully.", "C": "As a custom tool embedded in this team's agent only, with other teams able to copy the implementation into their own agents when they need the capability.", "D": "As a shared library that each team imports into their own Claude application code, with each team responsible for keeping the library up to date in their integration."}, "selected": "A", "correct": "A", "reason": "Skills and MCP servers are specifically designed for reusable, independently-invokable capabilities across teams/agents, unlike a copy-pasted embedded tool or a shared library requiring each team to manage updates."}, {"number": 49, "question": "Your Claude application runs a complex research workflow. Some research steps require access to all previous findings, while others only need the current question. The current implementation passes the full conversation history to every step. How would you adjust the implementation?", "options": {"A": "Continue passing the full conversation history to steps that require prior findings, and reduce the history passed to steps that only need the current question.", "B": "Pass recent conversation history to every step and prune older turns beyond a fixed lookback window to limit token consumption across the workflow.", "C": "Use subagents or multi-step workflows so each research step receives only the context it needs for its reasoning.", "D": "Summarize the conversation history into a compact representation and pass the summary to each step regardless of its context requirements."}, "selected": "C", "correct": "C", "reason": "Using subagents/multi-step workflows to give each step exactly the context it needs precisely matches the stated requirement (some steps need everything, others need only the current question) — a one-size lookback window or summary-for-everyone doesn't respect this per-step distinction."}, {"number": 50, "question": "You are establishing the guardrail strategy for a Claude application. The team wants to ensure guardrail failure does not expose the application to unsafe behavior. The guardrail strategy would...", "options": {"A": "implement a single comprehensive system prompt guardrail and validate its coverage against the application's full range of expected inputs.", "B": "layer multiple guardrails so a single guardrail failure does not expose the application to unsafe behavior.", "C": "apply guardrails at the application output level only and route flagged responses to a human reviewer before they are delivered to the user.", "D": "apply guardrails at the model level only and rely on the model's built-in safety behaviors to handle any cases the guardrail does not explicitly cover."}, "selected": "B", "correct": "B", "reason": "Defense-in-depth via layered guardrails ensures no single point of failure exposes the application, directly matching the stated requirement, unlike relying on one comprehensive guardrail, one layer only (output), or model built-ins alone."}, {"number": 51, "question": "Your Claude application's token costs have grown faster than expected. The team has not been tracking token usage by feature, so the team cannot identify which features are driving cost. How would you respond?", "options": {"A": "Reduce token usage uniformly across all features by half, applying the cut evenly across the application during normal operation.", "B": "Add token usage tracking by feature to the application's logging so the team can identify which features drive cost before recommending changes.", "C": "Switch every feature to the smallest model to cut cost broadly across the application during normal operation.", "D": "Tell the team that cost growth is unavoidable as the application scales and that no investigation will change the trajectory of the application's cost over the next several quarters."}, "selected": "B", "correct": "B", "reason": "Adding per-feature tracking directly addresses the stated lack of visibility, enabling informed decisions, unlike blind uniform cuts, blanket model downgrades, or declaring investigation pointless."}, {"number": 52, "question": "Your team is choosing how to add a capability to a Claude application. You want to apply the appropriate option, whether built-in tool, custom tool, Skill, or MCP server, based on the use case. You would choose the option that...", "options": {"A": "is the newest available option among built-in tools, custom tools, Skills, and MCP servers.", "B": "is the easiest to build given the team's current development tools and workflows.", "C": "is the most familiar to the team based on prior experience with similar capabilities.", "D": "matches the use case's scope, reuse needs, and integration context."}, "selected": "D", "correct": "D", "reason": "Choosing based on the use case's actual scope, reuse needs, and integration context is the principled approach, rather than picking based on novelty, ease, or familiarity alone, which can lead to a mismatched architecture."}, {"number": 53, "question": "A teammate is debugging a Claude application whose system prompt has grown to several hundred lines and now contains overlapping, contradictory, and obsolete instructions. How would you advise the teammate?", "options": {"A": "Split the prompt across multiple system prompts so the model sees a smaller portion at any given time.", "B": "Audit the prompt for overlap, contradiction, and obsolete content, then refactor so each instruction is clear, current, and non-redundant.", "C": "Add more explicit instructions so the most recent rules dominate the model's interpretation of the prompt during each request.", "D": "Tighten only the contradictory rules first, treating the overlap and obsolete content as lower-priority work the team can address later."}, "selected": "B", "correct": "B", "reason": "A full audit and refactor to remove overlap, contradiction, and obsolete content directly fixes the root problem, unlike splitting the prompt (doesn't resolve contradictions), adding more instructions (worsens bloat), or partial fixes that leave other issues unaddressed."}];
+
+let current = 0;
+const userAnswers = {};
+const submitted = {};
+
+function buildNav() {
+  const grid = document.getElementById('navGrid');
+  grid.innerHTML = '';
+  QUESTIONS.forEach((q, i) => {
+    const b = document.createElement('button');
+    b.className = 'nav-btn';
+    b.textContent = q.number;
+    b.title = 'Question ' + q.number;
+    b.onclick = () => { current = i; render(); };
+    grid.appendChild(b);
+  });
+}
+
+function updateNav() {
+  const grid = document.getElementById('navGrid');
+  [...grid.children].forEach((b, i) => {
+    b.classList.remove('active','answered','correct-mark','wrong-mark');
+    if (i === current) b.classList.add('active');
+    if (submitted[i]) {
+      const isCorrect = userAnswers[i] === QUESTIONS[i].correct;
+      b.classList.add(isCorrect ? 'correct-mark' : 'wrong-mark');
+    } else if (userAnswers[i]) {
+      b.classList.add('answered');
+    }
+  });
+}
+
+function updateProgress() {
+  const answeredN = Object.keys(submitted).length;
+  document.getElementById('progressFill').style.width = (answeredN / QUESTIONS.length * 100) + '%';
+  document.getElementById('answeredCount').textContent = answeredN;
+  let c = 0, w = 0;
+  Object.keys(submitted).forEach(i => {
+    if (userAnswers[i] === QUESTIONS[i].correct) c++; else w++;
+  });
+  document.getElementById('correctCount').textContent = c;
+  document.getElementById('wrongCount').textContent = w;
+}
+
+function render() {
+  const q = QUESTIONS[current];
+  document.getElementById('qLabel').textContent = 'Question ' + q.number + ' of ' + QUESTIONS.length;
+  document.getElementById('qText').textContent = q.question;
+
+  const optsDiv = document.getElementById('options');
+  optsDiv.innerHTML = '';
+  const isSubmitted = !!submitted[current];
+  const chosen = userAnswers[current];
+
+  ['A','B','C','D'].forEach(letter => {
+    const div = document.createElement('div');
+    div.className = 'option';
+    if (isSubmitted) div.classList.add('locked');
+    if (chosen === letter && !isSubmitted) div.classList.add('selected');
+    if (isSubmitted) {
+      if (letter === q.correct) div.classList.add('correct-answer');
+      else if (letter === chosen) div.classList.add('wrong-answer');
+    }
+    div.innerHTML = '<span class="letter">' + letter + '</span><span>' + q.options[letter] + '</span>';
+    if (!isSubmitted) {
+      div.onclick = () => {
+        userAnswers[current] = letter;
+        render();
+      };
+    }
+    optsDiv.appendChild(div);
+  });
+
+  const fb = document.getElementById('feedback');
+  if (isSubmitted) {
+    const isCorrect = chosen === q.correct;
+    fb.className = 'feedback show ' + (isCorrect ? 'correct' : 'wrong');
+    fb.innerHTML = '<div class="verdict">' + (isCorrect ? '&#9728;&#65039; Correct!' : '&#10007; Not quite') + '</div>' +
+      (isCorrect ? '' : '<div>Your answer: <strong>' + chosen + '</strong> &middot; Correct answer: <strong>' + q.correct + '</strong></div>') +
+      '<div style="margin-top:6px;"><strong>Why:</strong> ' + q.reason + '</div>';
+  } else {
+    fb.className = 'feedback';
+    fb.innerHTML = '';
+  }
+
+  document.getElementById('submitBtn').disabled = isSubmitted || !chosen;
+  document.getElementById('submitBtn').style.display = isSubmitted ? 'none' : 'inline-block';
+  document.getElementById('prevBtn').disabled = current === 0;
+  document.getElementById('nextBtn').disabled = current === QUESTIONS.length - 1;
+
+  updateNav();
+  updateProgress();
+}
+
+document.getElementById('submitBtn').onclick = () => {
+  if (!userAnswers[current]) return;
+  submitted[current] = true;
+  render();
+};
+document.getElementById('prevBtn').onclick = () => { if (current > 0) { current--; render(); } };
+document.getElementById('nextBtn').onclick = () => { if (current < QUESTIONS.length - 1) { current++; render(); } };
+
+/* ---------- Reset ---------- */
+const resetModal = document.getElementById('resetModal');
+function openResetModal() { resetModal.classList.add('show'); }
+function closeResetModal() { resetModal.classList.remove('show'); }
+document.getElementById('resetBtn').onclick = openResetModal;
+document.getElementById('cancelResetBtn').onclick = closeResetModal;
+document.getElementById('confirmResetBtn').onclick = () => {
+  Object.keys(userAnswers).forEach(k => delete userAnswers[k]);
+  Object.keys(submitted).forEach(k => delete submitted[k]);
+  current = 0;
+  closeResetModal();
+  showQuizView();
+  render();
+};
+document.getElementById('resetFromResultsBtn').onclick = openResetModal;
+
+/* ---------- Finish / Summary ---------- */
+const finishModal = document.getElementById('finishModal');
+function openFinishModal() {
+  const answeredN = Object.keys(submitted).length;
+  const unansweredN = QUESTIONS.length - answeredN;
+  const notSubmittedButChosen = Object.keys(userAnswers).filter(k => !submitted[k]).length;
+  let msg = "You're about to see your final summary. You can still come back and review individual questions afterward.";
+  if (unansweredN > 0) {
+    msg = unansweredN + ' of ' + QUESTIONS.length + ' question(s) are still unanswered or not submitted' +
+      (notSubmittedButChosen ? ' (' + notSubmittedButChosen + ' selected but not submitted)' : '') +
+      '. Finishing now will count those as unanswered/incorrect. Continue?';
+  }
+  document.getElementById('finishModalText').textContent = msg;
+  finishModal.classList.add('show');
+}
+function closeFinishModal() { finishModal.classList.remove('show'); }
+document.getElementById('finishBtn').onclick = openFinishModal;
+document.getElementById('cancelFinishBtn').onclick = closeFinishModal;
+document.getElementById('confirmFinishBtn').onclick = () => {
+  closeFinishModal();
+  showResultsView();
+};
+
+function showQuizView() {
+  document.getElementById('resultsPage').classList.remove('show');
+  document.getElementById('progressWrap').style.display = '';
+  document.getElementById('navGrid').style.display = '';
+  document.getElementById('card').style.display = '';
+  document.getElementById('summaryBar').style.display = '';
+}
+
+function showResultsView() {
+  // Treat any selected-but-not-submitted answer as submitted for final grading purposes
+  Object.keys(userAnswers).forEach(k => { if (!submitted[k]) submitted[k] = true; });
+  updateNav();
+  updateProgress();
+
+  document.getElementById('progressWrap').style.display = 'none';
+  document.getElementById('navGrid').style.display = 'none';
+  document.getElementById('card').style.display = 'none';
+  document.getElementById('summaryBar').style.display = 'none';
+  document.getElementById('resultsPage').classList.add('show');
+
+  const total = QUESTIONS.length;
+  let correctN = 0, wrongN = 0;
+  const rows = QUESTIONS.map((q, i) => {
+    const chosen = userAnswers[i];
+    const isSubmitted = !!submitted[i];
+    let status = 'unanswered';
+    if (isSubmitted && chosen) {
+      status = (chosen === q.correct) ? 'correct' : 'wrong';
+      if (status === 'correct') correctN++; else wrongN++;
+    }
+    return { q, chosen, status };
+  });
+  const answeredN = correctN + wrongN;
+  const unansweredN = total - answeredN;
+  const pct = total ? Math.round((correctN / total) * 100) : 0;
+  const passThreshold = 70;
+  const passed = pct >= passThreshold;
+
+  document.getElementById('scorePctNum').textContent = pct + '%';
+  document.getElementById('scoreCircle').style.setProperty('--pct', pct);
+  const statusEl = document.getElementById('statusLine');
+  statusEl.textContent = passed ? ('PASS — ' + correctN + ' / ' + total + ' correct') : ('NOT PASSING — ' + correctN + ' / ' + total + ' correct');
+  statusEl.className = 'status-line ' + (passed ? 'pass' : 'fail');
+
+  document.getElementById('rsTotal').textContent = total;
+  document.getElementById('rsAnswered').textContent = answeredN;
+  document.getElementById('rsCorrect').textContent = correctN;
+  document.getElementById('rsWrong').textContent = wrongN;
+  document.getElementById('rsUnanswered').textContent = unansweredN;
+
+  document.getElementById('cntAll').textContent = total;
+  document.getElementById('cntCorrect').textContent = correctN;
+  document.getElementById('cntWrong').textContent = wrongN;
+  document.getElementById('cntUnanswered').textContent = unansweredN;
+
+  window.__resultRows = rows;
+  window.__currentFilter = 'all';
+  renderResultRows('all');
+}
+
+function renderResultRows(filter) {
+  const rows = window.__resultRows || [];
+  const container = document.getElementById('resultRows');
+  container.innerHTML = '';
+  rows.filter(r => filter === 'all' ? true : r.status === filter).forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'result-row is-' + r.status;
+    const badgeText = r.status === 'correct' ? 'Correct' : r.status === 'wrong' ? 'Incorrect' : 'Unanswered';
+    let ansHtml = '';
+    if (r.status === 'unanswered') {
+      ansHtml = '<div class="rr-ans">Correct answer: <strong>' + r.q.correct + '. ' + r.q.options[r.q.correct] + '</strong></div>';
+    } else {
+      ansHtml = '<div class="rr-ans">Your answer: <strong>' + r.chosen + '. ' + r.q.options[r.chosen] + '</strong></div>';
+      if (r.status === 'wrong') {
+        ansHtml += '<div class="rr-ans">Correct answer: <strong>' + r.q.correct + '. ' + r.q.options[r.q.correct] + '</strong></div>';
+      }
+    }
+    div.innerHTML =
+      '<div class="rr-head"><span class="rr-num">Question ' + r.q.number + '</span><span class="rr-badge">' + badgeText + '</span></div>' +
+      '<div class="rr-q">' + r.q.question + '</div>' +
+      ansHtml +
+      '<div class="rr-reason"><strong>Why:</strong> ' + r.q.reason + '</div>';
+    container.appendChild(div);
+  });
+}
+
+document.querySelectorAll('.filter-row button').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.filter-row button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderResultRows(btn.getAttribute('data-filter'));
+  };
+});
+
+document.getElementById('reviewBtn').onclick = () => {
+  document.getElementById('reviewSection').scrollIntoView({ behavior: 'smooth' });
+};
+
+buildNav();
+render();
+</script>
+</body>
+</html>
